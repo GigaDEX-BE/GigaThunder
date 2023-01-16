@@ -1,4 +1,5 @@
 # get gui
+import logging
 import time
 from workers.fetcher import fetcher_process
 from multiprocessing import Process, Pipe
@@ -47,7 +48,8 @@ def update():
     plot_item.setData(x=xdata, y=ydata)
 
     if rpxGui.poll(0.001):
-        me_bid, me_ask = rpxGui.recv()
+        me_bid, me_ask, gd_bid, gd_ask = rpxGui.recv()
+        logging.info(f"gd: {gd_bid}, {gd_ask}")
         bid_line.setValue(me_bid)
         ask_line.setValue(me_ask)
         benchmark.floor = me_bid
