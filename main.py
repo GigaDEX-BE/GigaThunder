@@ -38,6 +38,7 @@ xdata = deque([], maxlen=NUM_TIME_SAMPLES)
 ydata = deque([], maxlen=NUM_TIME_SAMPLES)
 benchmark = FracLightGen()
 
+
 BENCHMARK_MODE = False
 BENCHMARK_TIME_SEC = 16
 bench_start_time = 0
