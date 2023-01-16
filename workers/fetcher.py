@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import asyncio
 import time
 import traceback
+from workers.utils.cancel_all import run_cancel_all
 from workers.utils.me_price_feed import get_highest_bid_async, get_lowest_ask_async
 from multiprocessing.connection import Connection
 from workers.utils.get_full_state import get_orderbooks, get_compressed_orderbook
@@ -57,7 +58,7 @@ class Fetcher:
                             pass
                         elif cmd == "CANCEL":
                             logging.info(f"cancelling")
-                            pass
+                            tx = await run_cancel_all(self.dexClient, self.uid)
                         else:
                             # TODO claim
                             logging.info(f"claiming")

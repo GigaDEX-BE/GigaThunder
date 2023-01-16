@@ -36,7 +36,6 @@ class Balancer:
                     _sol = balances['lamports'] / 1e9
                     _lots = balances['total_lots']
                     bals = await get_balances()
-                    logging.info(bals)
                     _csol = bals[self.uid][0] / 1e9
                     _clots = bals[self.uid][1]
 
