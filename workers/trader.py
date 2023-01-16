@@ -36,6 +36,8 @@ class Trader:
 
     async def run_loop(self):
         try:
+            logging.info(f"{self.dexClient.keypair.pubkey()}")
+            logging.info(await self.dexClient.get_wallet_balance())
             while True:
                 if self.rx_conn.poll(cn.POLL_TIME_SEC):
                     price_sol = self.rx_conn.recv()

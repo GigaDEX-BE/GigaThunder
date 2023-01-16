@@ -23,9 +23,9 @@ class CustomViewBox(pg.ViewBox):
             self.autoRange()
         elif ev.button() == QtCore.Qt.MouseButton.LeftButton:
             # TODO print coordinates
-            print(ev.pos())
-            print(ev.scenePos())
-            print(ev.screenPos())
+            pos = self.mapSceneToView(ev.scenePos())
+            price = pos.y()
+            self.trade_conn.send(price)
 
     ## reimplement mouseDragEvent to disable continuous axis zoom
     def mouseDragEvent(self, ev, axis=None):
@@ -33,6 +33,9 @@ class CustomViewBox(pg.ViewBox):
             ev.ignore()
         else:
             pg.ViewBox.mouseDragEvent(self, ev, axis=axis)
+
+    def set_trade_pipe(self, conn):
+        self.trade_conn = conn
 
 
 class CustomTickSliderItem(pg.TickSliderItem):
@@ -76,12 +79,13 @@ class CustomTickSliderItem(pg.TickSliderItem):
 
 # app = pg.mkQApp()
 
-def get_plot_widget():
+def get_plot_widget(txWashPipe):
     axis = pg.DateAxisItem(orientation='bottom')
     # p = QtGui.QPainter()
     # axis.generateDrawSpecs(p)
     # axis.setZoomLevelForDensity(0.001)
     vb = CustomViewBox()
+    vb.set_trade_pipe(txWashPipe)
 
     # TODO add line to custom viewbox
 

@@ -6,7 +6,7 @@ from pyqtgraph.dockarea.Dock import Dock
 from pyqtgraph.dockarea.DockArea import DockArea
 from pyqtgraph.Qt import QtWidgets
 
-def get_dash():
+def get_dash(txWashPipe):
     app = pg.mkQApp("DockArea Example")
     win = QtWidgets.QMainWindow()
     area = DockArea()
@@ -57,7 +57,7 @@ def get_dash():
     w2 = ConsoleWidget()
     d2.addWidget(w2)
 
-    w3, plot_item, ask_line, bid_line = get_plot_widget()
+    w3, plot_item, ask_line, bid_line = get_plot_widget(txWashPipe)
     d3.addWidget(w3)
 
     w4 = pg.PlotWidget(title="Dock 4 plot")
