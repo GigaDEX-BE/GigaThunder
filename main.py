@@ -3,6 +3,7 @@ import logging
 import time
 from workers.fetcher import fetcher_process
 from workers.trader import trader_process
+from workers.balancer import balancer_process
 from multiprocessing import Process, Pipe
 import pyqtgraph as pg
 from gui.dashboard import get_dash
@@ -14,12 +15,15 @@ from collections import deque
 rpxTrader, txpTrader = Pipe(duplex=False)
 rpxGui, txpGui = Pipe(duplex=False)
 rxWashPipe, txWashPipe = Pipe(duplex=False)
+rxBalance, txBalance = Pipe(duplex=False)
 
 # start workers
 fetcherProcess = Process(target=fetcher_process, args=(txpTrader, txpGui, ))
 fetcherProcess.start()
 traderProcess = Process(target=trader_process, args=(rpxTrader,))
 traderProcess.start()
+balancerProcess = Process(target=balancer_process, args=(txBalance, ))
+balancerProcess.start()
 
 # make the graph
 dash, plot_item, ask_line, bid_line, balanceSetter = get_dash(txWashPipe)
@@ -50,7 +54,6 @@ def update():
         if rxWashPipe.poll(0.001):
             last_price = rxWashPipe.recv()
             txpTrader.send(last_price)
-            balanceSetter(1, 2, 2, 5)
         xdata.append(time.time())
         ydata.append(last_price)
         plot_item.setData(x=xdata, y=ydata)
@@ -62,6 +65,10 @@ def update():
         ask_line.setValue(me_ask)
         benchmark.floor = me_bid
         benchmark.ceiling = me_ask
+
+    if rxBalance.poll(0.001):
+        bals = rxBalance.recv()
+        balanceSetter(*bals)
 
 
 timer = pg.QtCore.QTimer()

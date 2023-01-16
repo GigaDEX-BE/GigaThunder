@@ -32,7 +32,7 @@ async def get_orderbooks(get_asks=True, get_bids=True):
 async def get_balances():
     async with AsyncClient(cn.MAINNET_HTTP_URL) as client:
         num_info = await client.get_account_info(cn.balances, data_slice=DataSliceOpts(8, 8))
-        num_users = int.from_bytes(num_info.value.data, 'little')
+        num_users = int.from_bytes(num_info.value.data, 'little') + 1
         balances_info = await client.get_account_info(cn.balances, data_slice=DataSliceOpts(16, 16*num_users))
         balances_data = balances_info.value.data
         balances = {}
