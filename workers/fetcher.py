@@ -1,3 +1,6 @@
+import os
+from workers.utils.dex_api_helper.dex_client import GigaDexClient
+from dotenv import load_dotenv
 import asyncio
 import time
 import traceback
@@ -6,15 +9,20 @@ from multiprocessing.connection import Connection
 from workers.utils.get_full_state import get_orderbooks, get_compressed_orderbook
 from workers.conf import consts as cn
 import logging
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 FETCH_PERIOD_SEC = 5
 
 
 class Fetcher:
-    def __init__(self, traderConn, guiConn):
-        self.traderConn: Connection = traderConn
+    def __init__(self, guiConn, buttonsConn):
         self.guiConn: Connection = guiConn
+        self.buttonsConn: Connection = buttonsConn
+        pkstr = os.environ.get("pk_secret_hex")
+        lot_account_pk_str = os.environ.get("lot_account_pk_str")
+        self.uid = int(os.environ.get("bot_uid"))
+        self.dexClient = GigaDexClient(lot_account_pk_str, pkstr)
 
         self.txd = []
         self.rxd = []
@@ -41,6 +49,21 @@ class Fetcher:
                     else:
                         gd_ask = 0
                     self.guiConn.send((me_bid, me_ask, gd_bid, gd_ask))
+                else:
+                    if self.buttonsConn.poll(0.001):
+                        cmd = self.buttonsConn.recv()
+                        if cmd == "CHECK":
+                            logging.info(f"checking")
+                            pass
+                        elif cmd == "CANCEL":
+                            logging.info(f"cancelling")
+                            pass
+                        else:
+                            # TODO claim
+                            logging.info(f"claiming")
+                            tx = await self.dexClient.claim_balance()
+                            logging.info(f"claimed wiht: {tx}")
+
                 await asyncio.sleep(cn.MAIN_LOOP_SLEEP)
             except:
                 logging.error(traceback.format_exc())
@@ -48,7 +71,7 @@ class Fetcher:
                 await self.run_loop()
 
 
-def fetcher_process(traderConn, guiConn):
+def fetcher_process(guiConn, buttonsConn):
     loop = asyncio.new_event_loop()
-    reporter = Fetcher(traderConn, guiConn)
+    reporter = Fetcher(guiConn, buttonsConn)
     loop.run_until_complete(reporter.run_loop())

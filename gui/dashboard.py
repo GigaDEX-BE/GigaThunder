@@ -5,9 +5,28 @@ from pyqtgraph.console import ConsoleWidget
 from pyqtgraph.dockarea.Dock import Dock
 from pyqtgraph.dockarea.DockArea import DockArea
 from pyqtgraph.Qt import QtWidgets
+import os
+from dotenv import load_dotenv
+import asyncio
+import logging
+from workers.utils.dex_api_helper.dex_client import GigaDexClient
+load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
 
-def get_dash(txWashPipe):
+loop = asyncio.get_event_loop()
+pkstr = os.environ.get("pk_secret_hex")
+lot_account_pk_str = os.environ.get("lot_account_pk_str")
+uid = int(os.environ.get("bot_uid"))
+dexClient = GigaDexClient(lot_account_pk_str, pkstr)
+
+
+def claim_helper(*args):
+    logging.info(f"creating claim task and forgetting")
+    _task = loop.create_task(dexClient.claim_balance())
+
+
+def get_dash(txWashPipe, txButtons):
     app = pg.mkQApp("DockArea Example")
     win = QtWidgets.QMainWindow()
     area = DockArea()
@@ -20,7 +39,7 @@ def get_dash(txWashPipe):
     d3 = Dock("Dock3", size=(500,400))
     d4 = Dock("Dock4 (tabbed) - Plot", size=(500,200))
 
-    d5 = Dock("Dock5 - Image", size=(500,200))
+    d5 = Dock("Dock5 - Image", size=(500,100))
 
     d6 = Dock("Dock6 (tabbed) - Plot", size=(500,200))
     area.addDock(d1, 'left')
@@ -63,15 +82,21 @@ def get_dash(txWashPipe):
     d4.addWidget(w4)
 
     # TODO remove
-    w5 = pg.ImageView()
-    w5.setImage(np.random.normal(size=(100,100)))
+    # w5 = pg.ImageView()
+    # w5.setImage(np.random.normal(size=(100,100)))
 
     # TODO but a bunch of buttons in here instead
     buttonLayout = pg.LayoutWidget()
-    b1 = QtWidgets.QPushButton('BUY')
-    b2 = QtWidgets.QPushButton('SELL')
-    b3 = QtWidgets.QPushButton('BENCHMARK')
-    b4 = QtWidgets.QPushButton('CLAIM')
+    b1 = QtWidgets.QPushButton('Check Open')
+    b2 = QtWidgets.QPushButton('Cancel')
+    b3 = QtWidgets.QPushButton('Benchmark')
+    b4 = QtWidgets.QPushButton('Claim')
+
+    b1.clicked.connect(lambda: txButtons.send("CHECK"))
+    b2.clicked.connect(lambda: txButtons.send("CANCEL"))
+    # b3.clicked.connect(lambda: txButtons.send("BENCHMARK"))
+    b4.clicked.connect(lambda: txButtons.send("CLAIM"))
+
 
     buttonLayout.addWidget(b1, row=0, col=0)
     buttonLayout.addWidget(b2, row=0, col=1)

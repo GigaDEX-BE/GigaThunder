@@ -16,9 +16,10 @@ rpxTrader, txpTrader = Pipe(duplex=False)
 rpxGui, txpGui = Pipe(duplex=False)
 rxWashPipe, txWashPipe = Pipe(duplex=False)
 rxBalance, txBalance = Pipe(duplex=False)
+rxButtons, txButtons = Pipe(duplex=False)
 
 # start workers
-fetcherProcess = Process(target=fetcher_process, args=(txpTrader, txpGui, ))
+fetcherProcess = Process(target=fetcher_process, args=(txpGui, rxButtons ))
 fetcherProcess.start()
 traderProcess = Process(target=trader_process, args=(rpxTrader,))
 traderProcess.start()
@@ -26,7 +27,7 @@ balancerProcess = Process(target=balancer_process, args=(txBalance, ))
 balancerProcess.start()
 
 # make the graph
-dash, plot_item, ask_line, bid_line, balanceSetter = get_dash(txWashPipe)
+dash, plot_item, ask_line, bid_line, balanceSetter = get_dash(txWashPipe, txButtons)
 dash.show()
 
 # HIDE THIS AFTER THOUGH FFS, in like a class duh
