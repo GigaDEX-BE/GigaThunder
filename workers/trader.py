@@ -54,6 +54,7 @@ class Trader:
                     coro = self.dexClient.limit_sell_market_buy(lams_per_lot, 1)
                     task = asyncio.create_task(coro, name=f"{int(time.time()*1000)}")
                     task.add_done_callback(self.trade_callback)
+                    await self.dexClient.randomize_rpc()
                 await asyncio.sleep(cn.MAIN_LOOP_SLEEP)
         except Exception as _e:
             logging.error(traceback.format_exception())
