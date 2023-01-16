@@ -24,6 +24,7 @@ class Trader:
         self.dexClient = GigaDexClient(lot_account_pk_str, pkstr)
         self.latencies = deque([], maxlen=100)
         self.num_fails = 0
+        self.num_trades = 0
 
     def trade_callback(self, task):
         dt = int(time.time()*1000) - int(task.get_name())
@@ -31,7 +32,8 @@ class Trader:
             sig = task.result()
             logging.info(sig)
             self.latencies.append(dt)
-            logging.info(f"mean confirmation: {np.mean(self.latencies)}")
+            self.num_trades += 1
+            logging.info(f"mean confirmation: {np.mean(self.latencies)}, num trades: {self.num_trades}")
         except Exception as e:
             logging.error(traceback.format_exc())
             self.num_fails += 1

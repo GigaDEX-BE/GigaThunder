@@ -71,21 +71,18 @@ def get_dash(txWashPipe, txButtons):
     w1.addWidget(claimableLabel, row=1, col=0)
     d1.addWidget(w1)
 
-    w2 = ConsoleWidget()
+    # TODO empower this much as possible
+
+    w2 = ConsoleWidget(namespace={'asyncio': asyncio, 'dexClient': dexClient, 'uid': uid})
     d2.addWidget(w2)
 
-    w3, plot_item, ask_line, bid_line = get_plot_widget(txWashPipe)
+    w3, plot_item, ask_line, bid_line, gd_bid_line, gd_ask_line = get_plot_widget(txWashPipe)
     d3.addWidget(w3)
 
     w4 = pg.PlotWidget(title="Dock 4 plot")
     w4.plot(np.random.normal(size=100))
     d4.addWidget(w4)
 
-    # TODO remove
-    # w5 = pg.ImageView()
-    # w5.setImage(np.random.normal(size=(100,100)))
-
-    # TODO but a bunch of buttons in here instead
     buttonLayout = pg.LayoutWidget()
     b1 = QtWidgets.QPushButton('Check Open')
     b2 = QtWidgets.QPushButton('Cancel')
@@ -107,7 +104,7 @@ def get_dash(txWashPipe, txButtons):
     w6 = pg.PlotWidget(title="Dock 6 plot")
     w6.plot(np.random.normal(size=100))
     d6.addWidget(w6)
-    return win, plot_item, ask_line, bid_line, balanceSetter
+    return win, plot_item, ask_line, bid_line, balanceSetter, gd_bid_line, gd_ask_line
 
 
 

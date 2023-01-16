@@ -89,13 +89,17 @@ def get_plot_widget(txWashPipe):
     # TODO add line to custom viewbox
 
     pw = pg.PlotWidget(viewBox=vb, axisItems={'bottom': axis}, enableMenu=False,
-                       title="PlotItem with DateAxisItem, custom ViewBox and markers on x axis<br>Menu disabled, mouse behavior changed: left-drag to zoom, right-click to reset zoom")
+                       title="Interactive Click Trading")
 
     me_ask_line = pg.InfiniteLine(pos=2, movable=True, pen=pg.mkPen("red"), angle=0)
     me_bid_line = pg.InfiniteLine(pos=7, movable=True, pen=pg.mkPen("red"), angle=0)
     pw.addItem(me_ask_line)
     pw.addItem(me_bid_line)
 
+    gd_ask_line = pg.InfiniteLine(pos=1, movable=True, pen=pg.mkPen("blue"), angle=0)
+    gd_bid_line = pg.InfiniteLine(pos=8, movable=True, pen=pg.mkPen("blue"), angle=0)
+    # pw.addItem(gd_bid_line)
+    # pw.addItem(gd_ask_line)
 
     dates = np.arange(8) * (3600 * 24 * 356)
     plot_item = pw.plot(x=dates, y=[1, 6, 2, 4, 3, 5, 6, 8])
@@ -110,6 +114,6 @@ def get_plot_widget(txWashPipe):
 
     pw.setWindowTitle('pyqtgraph example: customPlot')
 
-    return pw, plot_item, me_ask_line, me_bid_line
+    return pw, plot_item, me_ask_line, me_bid_line, gd_bid_line, gd_ask_line
 
 

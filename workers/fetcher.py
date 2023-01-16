@@ -45,12 +45,12 @@ class Fetcher:
                     asks = get_compressed_orderbook(asks_nodes, is_ask=True)
                     if len(bids) > 0:
                         last_bids = bids
-                        gd_bid = bids[0][0]
+                        gd_bid = bids[0][0] / 1e9
                     else:
                         gd_bid = 0
                     if len(asks) > 0:
                         last_asks = asks
-                        gd_ask = asks[0][0]
+                        gd_ask = asks[0][0] / 1e9
                     else:
                         gd_ask = 0
                     self.guiConn.send((me_bid, me_ask, gd_bid, gd_ask))

@@ -27,7 +27,7 @@ balancerProcess = Process(target=balancer_process, args=(txBalance, ))
 balancerProcess.start()
 
 # make the graph
-dash, plot_item, ask_line, bid_line, balanceSetter = get_dash(txWashPipe, txButtons)
+dash, plot_item, ask_line, bid_line, balanceSetter, gd_bid_line, gd_ask_line = get_dash(txWashPipe, txButtons)
 dash.show()
 
 # HIDE THIS AFTER THOUGH FFS, in like a class duh
@@ -39,14 +39,14 @@ ydata = deque([], maxlen=NUM_TIME_SAMPLES)
 benchmark = FracLightGen()
 
 BENCHMARK_MODE = False
-BENCHMARK_TIME_SEC = 5
+BENCHMARK_TIME_SEC = 16
 bench_start_time = 0
 
 last_price = 62
 
 
 def update():
-    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader, BENCHMARK_MODE, last_price, bench_start_time
+    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader, BENCHMARK_MODE, last_price, bench_start_time, gd_ask_line, gd_bid_line
     if BENCHMARK_MODE:
         price = benchmark.next()
         xdata.append(time.time())
@@ -70,6 +70,10 @@ def update():
 
     if rpxGui.poll(0.001):
         me_bid, me_ask, gd_bid, gd_ask = rpxGui.recv()
+        # if gd_bid > 0:
+        #     gd_bid_line.setValue(gd_bid)
+        # if gd_ask > 0:
+        #     gd_ask_line.setValue(gd_ask)
         bid_line.setValue(me_bid)
         ask_line.setValue(me_ask)
         benchmark.floor = me_bid
