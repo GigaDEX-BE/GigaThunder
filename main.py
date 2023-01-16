@@ -22,7 +22,7 @@ traderProcess = Process(target=trader_process, args=(rpxTrader,))
 traderProcess.start()
 
 # make the graph
-dash, plot_item, ask_line, bid_line = get_dash(txWashPipe)
+dash, plot_item, ask_line, bid_line, balanceSetter = get_dash(txWashPipe)
 dash.show()
 
 # HIDE THIS AFTER THOUGH FFS, in like a class duh
@@ -50,6 +50,7 @@ def update():
         if rxWashPipe.poll(0.001):
             last_price = rxWashPipe.recv()
             txpTrader.send(last_price)
+            balanceSetter(1, 2, 2, 5)
         xdata.append(time.time())
         ydata.append(last_price)
         plot_item.setData(x=xdata, y=ydata)

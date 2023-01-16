@@ -6,6 +6,7 @@ from pyqtgraph.dockarea.Dock import Dock
 from pyqtgraph.dockarea.DockArea import DockArea
 from pyqtgraph.Qt import QtWidgets
 
+
 def get_dash(txWashPipe):
     app = pg.mkQApp("DockArea Example")
     win = QtWidgets.QMainWindow()
@@ -34,25 +35,22 @@ def get_dash(txWashPipe):
     area.moveDock(d5, 'top', d2)
 
     ## first dock gets save/restore buttons
+
     w1 = pg.LayoutWidget()
-    label = QtWidgets.QLabel("PoopyFart")
-    saveBtn = QtWidgets.QPushButton('Save dock state')
-    restoreBtn = QtWidgets.QPushButton('Restore dock state')
-    restoreBtn.setEnabled(False)
-    w1.addWidget(label, row=0, col=0)
-    w1.addWidget(saveBtn, row=1, col=0)
-    w1.addWidget(restoreBtn, row=2, col=0)
+
+    solLabel = QtWidgets.QLabel("8.3 SOL")
+    lotLabel = QtWidgets.QLabel('6000 LOTS')
+    claimableLabel = QtWidgets.QLabel('Claimable: 0.4 SOL, 10 LOTS')
+
+    def balanceSetter(sol, lots, csol, clots):
+        solLabel.setText(f"{sol} SOL")
+        lotLabel.setText(f"{lots} LOTS")
+        claimableLabel.setText(f"Claimable: {csol} SOL, {clots} LOTS")
+
+    w1.addWidget(solLabel, row=0, col=0)
+    w1.addWidget(lotLabel, row=0, col=1)
+    w1.addWidget(claimableLabel, row=1, col=0)
     d1.addWidget(w1)
-    state = None
-    def save():
-        global state
-        state = area.saveState()
-        restoreBtn.setEnabled(True)
-    def load():
-        global state
-        area.restoreState(state)
-    saveBtn.clicked.connect(save)
-    restoreBtn.clicked.connect(load)
 
     w2 = ConsoleWidget()
     d2.addWidget(w2)
@@ -84,7 +82,7 @@ def get_dash(txWashPipe):
     w6 = pg.PlotWidget(title="Dock 6 plot")
     w6.plot(np.random.normal(size=100))
     d6.addWidget(w6)
-    return win, plot_item, ask_line, bid_line
+    return win, plot_item, ask_line, bid_line, balanceSetter
 
 
 

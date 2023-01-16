@@ -6,7 +6,6 @@ DateAxisItem and a customized ViewBox.
 import numpy as np
 from PySide6 import QtGui, QtCore
 from pyqtgraph.graphicsItems.PlotDataItem import PlotDataItem
-
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
