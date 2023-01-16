@@ -50,6 +50,8 @@ def update():
         me_bid, me_ask = rpxGui.recv()
         bid_line.setValue(me_bid)
         ask_line.setValue(me_ask)
+        benchmark.floor = me_bid
+        benchmark.ceiling = me_ask
 
 
 timer = pg.QtCore.QTimer()
