@@ -55,6 +55,7 @@ def update():
         txpTrader.send(price)
         if (time.time() - bench_start_time) > BENCHMARK_TIME_SEC:
             BENCHMARK_MODE = False
+            last_price = price
     else:
         if rxWashPipe.poll(0.001):
             last_price = rxWashPipe.recv()

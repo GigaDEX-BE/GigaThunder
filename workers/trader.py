@@ -1,6 +1,7 @@
 import time
 from workers.conf import consts as cn
 import asyncio
+import numpy as np
 import random
 from collections import deque
 import os
@@ -21,7 +22,7 @@ class Trader:
         pkstr = os.environ.get("pk_secret_hex")
         lot_account_pk_str = os.environ.get("lot_account_pk_str")
         self.dexClient = GigaDexClient(lot_account_pk_str, pkstr)
-        self.latencies = deque([], maxlen=1000)
+        self.latencies = deque([], maxlen=100)
         self.num_fails = 0
 
     def trade_callback(self, task):
@@ -30,6 +31,7 @@ class Trader:
             sig = task.result()
             logging.info(sig)
             self.latencies.append(dt)
+            logging.info(f"mean confirmation: {np.mean(self.latencies)}")
         except Exception as e:
             logging.error(traceback.format_exc())
             self.num_fails += 1
@@ -38,9 +40,14 @@ class Trader:
         try:
             logging.info(f"{self.dexClient.keypair.pubkey()}")
             logging.info(await self.dexClient.get_wallet_balance())
+            last_price = None
             while True:
                 if self.rx_conn.poll(cn.POLL_TIME_SEC):
                     price_sol = self.rx_conn.recv()
+                    if price_sol == last_price:
+                        continue
+                    else:
+                        last_price = price_sol
                     lams_per_lot = int(price_sol * 1e9 / 1e3)
                     coro = self.dexClient.limit_sell_market_buy(lams_per_lot, 1)
                     task = asyncio.create_task(coro, name=f"{int(time.time()*1000)}")
