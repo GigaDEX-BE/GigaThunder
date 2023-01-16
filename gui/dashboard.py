@@ -57,7 +57,7 @@ def get_dash():
     w2 = ConsoleWidget()
     d2.addWidget(w2)
 
-    w3, plot_item = get_plot_widget()
+    w3, plot_item, ask_line, bid_line = get_plot_widget()
     d3.addWidget(w3)
 
     w4 = pg.PlotWidget(title="Dock 4 plot")
@@ -84,7 +84,7 @@ def get_dash():
     w6 = pg.PlotWidget(title="Dock 6 plot")
     w6.plot(np.random.normal(size=100))
     d6.addWidget(w6)
-    return win, plot_item
+    return win, plot_item, ask_line, bid_line
 
 
 

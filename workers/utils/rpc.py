@@ -3,13 +3,10 @@ from anchorpy.provider import Wallet
 from anchorpy import Provider
 from solders.pubkey import Pubkey
 from solana.transaction import Transaction
-
 from solders.system_program import ID as SYS_PROGRAM_ID
 from solders.sysvar import RENT as SYSVAR_RENT_PUBKEY
-
-
-from gigadex_client import instructions
-from gigadex_client.program_id import PROGRAM_ID
+from workers.utils.gigadex_client import instructions
+from workers.utils.gigadex_client.program_id import PROGRAM_ID
 from spl.token.constants import TOKEN_PROGRAM_ID, WRAPPED_SOL_MINT
 from spl.token.async_client import AsyncToken
 from solana.rpc.types import TxOpts

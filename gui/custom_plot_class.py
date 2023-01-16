@@ -93,9 +93,8 @@ def get_plot_widget():
 
     dates = np.arange(8) * (3600 * 24 * 356)
     plot_item = pw.plot(x=dates, y=[1, 6, 2, 4, 3, 5, 6, 8])
-    print(f"type plot item is : {type(plot_item)}")
 
-    # Using allowAdd and allowRemove to limit user interactionkk0
+    # Using allowAdd and allowRemove to limit user interaction
     tickViewer = CustomTickSliderItem(allowAdd=False, allowRemove=False)
     vb.sigXRangeChanged.connect(tickViewer.updateRange)
     pw.plotItem.layout.addItem(tickViewer, 4, 1)
@@ -104,8 +103,6 @@ def get_plot_widget():
 
     pw.setWindowTitle('pyqtgraph example: customPlot')
 
-    return pw, plot_item
+    return pw, plot_item, me_ask_line, me_bid_line
 
 
-# if __name__ == '__main__':
-#     pg.exec()

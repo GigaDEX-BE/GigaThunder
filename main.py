@@ -1,21 +1,30 @@
 # get gui
 import time
-
+from workers.fetcher import fetcher_process
+from multiprocessing import Process, Pipe
 import pyqtgraph as pg
 from gui.dashboard import get_dash
 from gui.utils.FracLightGen import FracLightGen
 from collections import deque
 
-# TODO animate graph at 5 second intervals...
 
-# TODO start workers
+# init pipes
+rpxTrader, txpTrader = Pipe(duplex=False)
+rpxGui, txpGui = Pipe(duplex=False)
+
+# start workers
+fetcherProcess = Process(target=fetcher_process, args=(txpTrader, txpGui, ))
+fetcherProcess.start()
+
+
+
 # TODO share pipes between gui and workers
 # TODO draw actual me and obook lines...
 # TODO print to console
 # TODO make a trade
 # TODO draw a line
 
-dash, plot_item = get_dash()
+dash, plot_item, ask_line, bid_line = get_dash()
 dash.show()
 
 # HIDE THIS AFTER THOUGH FFS, in like a class duh
@@ -27,13 +36,20 @@ t0_ms = (time.time()*1000)
 xdata = deque([], maxlen=NUM_TIME_SAMPLES)
 ydata = deque([], maxlen=NUM_TIME_SAMPLES)
 benchmark = FracLightGen()
+
+
 def update():
-    global benchmark, plot_item, t0_ms, xdata, ydata
+    global benchmark, plot_item, t0_ms, xdata, ydata, rpxGui, ask_line, bid_line
     price = benchmark.next()
     ts = int(time.time()*1000) - t0_ms
     xdata.append(ts)
     ydata.append(price)
     plot_item.setData(x=xdata, y=ydata)
+
+    if rpxGui.poll(0.001):
+        me_bid, me_ask = rpxGui.recv()
+        bid_line.setValue(me_bid)
+        ask_line.setValue(me_ask)
 
 
 timer = pg.QtCore.QTimer()
