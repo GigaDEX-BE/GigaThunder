@@ -21,11 +21,11 @@ dash.show()
 # HIDE THIS AFTER THOUGH FFS, in like a class duh
 
 
-counter = 0
+NUM_TIME_SAMPLES = 400
 
 t0_ms = (time.time()*1000)
-xdata = deque([], maxlen=1_000)
-ydata = deque([], maxlen=1_000)
+xdata = deque([], maxlen=NUM_TIME_SAMPLES)
+ydata = deque([], maxlen=NUM_TIME_SAMPLES)
 benchmark = FracLightGen()
 def update():
     global benchmark, plot_item, t0_ms, xdata, ydata
@@ -38,7 +38,7 @@ def update():
 
 timer = pg.QtCore.QTimer()
 timer.timeout.connect(update)
-timer.start(10)
+timer.start(16)
 
 
 
