@@ -31,21 +31,20 @@ dash.show()
 # HIDE THIS AFTER THOUGH FFS, in like a class duh
 
 
-NUM_TIME_SAMPLES = 400
+NUM_TIME_SAMPLES = 800
 
-t0_ms = (time.time()*1000)
 xdata = deque([], maxlen=NUM_TIME_SAMPLES)
 ydata = deque([], maxlen=NUM_TIME_SAMPLES)
 benchmark = FracLightGen()
 
 
 def update():
-    global benchmark, plot_item, t0_ms, xdata, ydata, rpxGui, ask_line, bid_line
+    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line
     price = benchmark.next()
-    ts = int(time.time()*1000) - t0_ms
-    xdata.append(ts)
+    xdata.append(time.time())
     ydata.append(price)
     plot_item.setData(x=xdata, y=ydata)
+    # TODO send to trader to execute when in benchmark mode
 
     if rpxGui.poll(0.001):
         me_bid, me_ask, gd_bid, gd_ask = rpxGui.recv()

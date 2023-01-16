@@ -78,6 +78,9 @@ class CustomTickSliderItem(pg.TickSliderItem):
 
 def get_plot_widget():
     axis = pg.DateAxisItem(orientation='bottom')
+    # p = QtGui.QPainter()
+    # axis.generateDrawSpecs(p)
+    # axis.setZoomLevelForDensity(0.001)
     vb = CustomViewBox()
 
     # TODO add line to custom viewbox
@@ -93,6 +96,7 @@ def get_plot_widget():
 
     dates = np.arange(8) * (3600 * 24 * 356)
     plot_item = pw.plot(x=dates, y=[1, 6, 2, 4, 3, 5, 6, 8])
+    plot_item.setPen(pg.mkPen("green"))
 
     # Using allowAdd and allowRemove to limit user interaction
     tickViewer = CustomTickSliderItem(allowAdd=False, allowRemove=False)

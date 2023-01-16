@@ -3,7 +3,7 @@ import random
 
 MAINNET_HTTP_URLS = [
     "https://prettiest-evocative-sailboat.solana-mainnet.quiknode.pro/",
-    "https://broken-falling-dew.solana-mainnet.quiknode.pro/2593467a7cd46abf29edb3da687386fd3c3b7f59/",
+    "https://broken-falling-dew.solana-mainnet.quiknode.pro/",
     "https://aged-boldest-tree.solana-mainnet.quiknode.pro/",
     "https://snowy-boldest-needle.solana-mainnet.quiknode.pro/",
     "https://practical-cosmopolitan-dream.solana-mainnet.quiknode.pro/",
