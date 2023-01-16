@@ -30,6 +30,8 @@ class Fetcher:
 
     async def run_loop(self):
         last_fetch_ts = 0
+        last_bids = []
+        last_asks = []
         while True:
             try:
                 ts = time.time()
@@ -42,10 +44,12 @@ class Fetcher:
                     bids = get_compressed_orderbook(bids_nodes, is_ask=False)
                     asks = get_compressed_orderbook(asks_nodes, is_ask=True)
                     if len(bids) > 0:
+                        last_bids = bids
                         gd_bid = bids[0][0]
                     else:
                         gd_bid = 0
                     if len(asks) > 0:
+                        last_asks = asks
                         gd_ask = asks[0][0]
                     else:
                         gd_ask = 0
@@ -54,13 +58,12 @@ class Fetcher:
                     if self.buttonsConn.poll(0.001):
                         cmd = self.buttonsConn.recv()
                         if cmd == "CHECK":
-                            logging.info(f"checking")
-                            pass
+                            logging.info(last_asks)
+                            logging.info(last_bids)
                         elif cmd == "CANCEL":
                             logging.info(f"cancelling")
-                            tx = await run_cancel_all(self.dexClient, self.uid)
+                            await run_cancel_all(self.dexClient, self.uid)
                         else:
-                            # TODO claim
                             logging.info(f"claiming")
                             tx = await self.dexClient.claim_balance()
                             logging.info(f"claimed wiht: {tx}")

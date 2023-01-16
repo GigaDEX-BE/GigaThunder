@@ -39,21 +39,29 @@ ydata = deque([], maxlen=NUM_TIME_SAMPLES)
 benchmark = FracLightGen()
 
 BENCHMARK_MODE = False
+BENCHMARK_TIME_SEC = 5
+bench_start_time = 0
 
 last_price = 62
 
 
 def update():
-    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader, BENCHMARK_MODE, last_price
+    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader, BENCHMARK_MODE, last_price, bench_start_time
     if BENCHMARK_MODE:
         price = benchmark.next()
         xdata.append(time.time())
         ydata.append(price)
         plot_item.setData(x=xdata, y=ydata)
         txpTrader.send(price)
+        if (time.time() - bench_start_time) > BENCHMARK_TIME_SEC:
+            BENCHMARK_MODE = False
     else:
         if rxWashPipe.poll(0.001):
             last_price = rxWashPipe.recv()
+            if last_price == 88888888:
+                BENCHMARK_MODE = True
+                bench_start_time = time.time()
+                return
             txpTrader.send(last_price)
         xdata.append(time.time())
         ydata.append(last_price)
@@ -61,7 +69,6 @@ def update():
 
     if rpxGui.poll(0.001):
         me_bid, me_ask, gd_bid, gd_ask = rpxGui.recv()
-        logging.info(f"gd: {gd_bid}, {gd_ask}")
         bid_line.setValue(me_bid)
         ask_line.setValue(me_ask)
         benchmark.floor = me_bid
