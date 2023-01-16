@@ -2,6 +2,7 @@
 import logging
 import time
 from workers.fetcher import fetcher_process
+from workers.trader import trader_process
 from multiprocessing import Process, Pipe
 import pyqtgraph as pg
 from gui.dashboard import get_dash
@@ -16,15 +17,10 @@ rpxGui, txpGui = Pipe(duplex=False)
 # start workers
 fetcherProcess = Process(target=fetcher_process, args=(txpTrader, txpGui, ))
 fetcherProcess.start()
+traderProcess = Process(target=trader_process, args=(rpxTrader,))
+traderProcess.start()
 
-
-
-# TODO share pipes between gui and workers
-# TODO draw actual me and obook lines...
-# TODO print to console
-# TODO make a trade
-# TODO draw a line
-
+# make the graph
 dash, plot_item, ask_line, bid_line = get_dash()
 dash.show()
 
@@ -39,12 +35,13 @@ benchmark = FracLightGen()
 
 
 def update():
-    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line
+    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader
     price = benchmark.next()
     xdata.append(time.time())
     ydata.append(price)
     plot_item.setData(x=xdata, y=ydata)
     # TODO send to trader to execute when in benchmark mode
+    txpTrader.send(price)
 
     if rpxGui.poll(0.001):
         me_bid, me_ask, gd_bid, gd_ask = rpxGui.recv()
@@ -57,7 +54,7 @@ def update():
 
 timer = pg.QtCore.QTimer()
 timer.timeout.connect(update)
-timer.start(16)
+timer.start(10)
 
 
 
