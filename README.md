@@ -15,7 +15,7 @@ Currently, this repo is optimized to allow my BE guys to easily test new RPCs an
 
 Also, it uses a pretty sick rapid-prototyping framework that can do pretty much anything like a video game. 
 
-
+***WE NEED TO FIND A DEDICATED RPC PROVIDER STAT. QN says they don't rate limit but it provably false.***
 
 
 [launch-technically.webm](https://user-images.githubusercontent.com/93259127/212799553-6e80d7bc-0a5c-4ba8-8a6f-273f38e1a506.webm)
