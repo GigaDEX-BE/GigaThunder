@@ -96,10 +96,10 @@ def get_plot_widget(txWashPipe):
     pw.addItem(me_ask_line)
     pw.addItem(me_bid_line)
 
-    gd_ask_line = pg.InfiniteLine(pos=1, movable=True, pen=pg.mkPen("blue"), angle=0)
-    gd_bid_line = pg.InfiniteLine(pos=8, movable=True, pen=pg.mkPen("blue"), angle=0)
-    # pw.addItem(gd_bid_line)
-    # pw.addItem(gd_ask_line)
+    gd_ask_line = pg.InfiniteLine(pos=66, movable=True, pen=pg.mkPen("blue"), angle=0)
+    gd_bid_line = pg.InfiniteLine(pos=42, movable=True, pen=pg.mkPen("blue"), angle=0)
+    pw.addItem(gd_bid_line)
+    pw.addItem(gd_ask_line)
 
     dates = np.arange(8) * (3600 * 24 * 356)
     plot_item = pw.plot(x=dates, y=[1, 6, 2, 4, 3, 5, 6, 8])

@@ -6,7 +6,7 @@ base_time = 1
 scale = 2
 num_scales = 4
 periods = [base_time*(scale**i) for i in range(num_scales)]
-narrower = 0.05
+narrower = 0.10
 
 
 
