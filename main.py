@@ -17,17 +17,18 @@ rpxGui, txpGui = Pipe(duplex=False)
 rxWashPipe, txWashPipe = Pipe(duplex=False)
 rxBalance, txBalance = Pipe(duplex=False)
 rxButtons, txButtons = Pipe(duplex=False)
+rxSigs, txSigs = Pipe(duplex=False)
 
 # start workers
 fetcherProcess = Process(target=fetcher_process, args=(txpGui, rxButtons ))
 fetcherProcess.start()
-traderProcess = Process(target=trader_process, args=(rpxTrader,))
+traderProcess = Process(target=trader_process, args=(rpxTrader, txSigs, ))
 traderProcess.start()
 balancerProcess = Process(target=balancer_process, args=(txBalance, ))
 balancerProcess.start()
 
 # make the graph
-dash, plot_item, ask_line, bid_line, balanceSetter, gd_bid_line, gd_ask_line = get_dash(txWashPipe, txButtons)
+dash, plot_item, ask_line, bid_line, balanceSetter, gd_bid_line, gd_ask_line, consoleWidget, confirmPlot, latePlot = get_dash(txWashPipe, txButtons)
 dash.show()
 
 # HIDE THIS AFTER THOUGH FFS, in like a class duh
@@ -39,15 +40,22 @@ ydata = deque([], maxlen=NUM_TIME_SAMPLES)
 benchmark = FracLightGen()
 
 
+txXaxis = deque([], maxlen=NUM_TIME_SAMPLES)
+confirmData = deque([], maxlen=NUM_TIME_SAMPLES)
+latencyData = deque([], maxlen=NUM_TIME_SAMPLES)
+
 BENCHMARK_MODE = False
 BENCHMARK_TIME_SEC = 16
 bench_start_time = 0
 
 last_price = 62
 
+num_confirmed_txs = 0
 
 def update():
-    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader, BENCHMARK_MODE, last_price, bench_start_time, gd_ask_line, gd_bid_line
+    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader, BENCHMARK_MODE, last_price, \
+        bench_start_time, gd_ask_line, gd_bid_line, consoleWidget, num_confirmed_txs, confirmData, latencyData, txXaxis, confirmPlot, latePlot
+
     if BENCHMARK_MODE:
         price = benchmark.next()
         xdata.append(time.time())
@@ -83,6 +91,16 @@ def update():
     if rxBalance.poll(0.001):
         bals = rxBalance.recv()
         balanceSetter(*bals)
+
+    if rxSigs.poll(0.001):
+        sig, dt = rxSigs.recv()
+        txXaxis.append(time.time())
+        num_confirmed_txs += 1
+        confirmData.append(num_confirmed_txs)
+        latencyData.append(dt)
+        confirmPlot.setData(x=txXaxis, y=confirmData)
+        latePlot.setData(x=txXaxis, y=latencyData)
+        consoleWidget.write(f"https://explorer.solana.com/tx/{sig}\nConfirmation Latency {dt}ms\n\n")
 
 
 timer = pg.QtCore.QTimer()

@@ -12,7 +12,7 @@ from spl.token.async_client import AsyncToken
 from solana.rpc.types import TxOpts
 from solana.rpc.commitment import Confirmed, Finalized
 
-fastOpts = TxOpts(skip_preflight=True, preflight_commitment=Confirmed, skip_confirmation=False)
+fastOpts = TxOpts(skip_preflight=False, preflight_commitment=Confirmed, skip_confirmation=False)
 
 
 async def run_create_user_account(async_client, keypair):

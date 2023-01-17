@@ -71,16 +71,25 @@ def get_dash(txWashPipe, txButtons):
     w1.addWidget(claimableLabel, row=1, col=0)
     d1.addWidget(w1)
 
+    def ask(price, amount):
+        price = int(price*1e6)
+        loop = asyncio.get_event_loop()
+        tx = loop.run_until_complete(dexClient.limit_sell(price, amount))
+        return tx
     # TODO empower this much as possible
-
-    w2 = ConsoleWidget(namespace={'asyncio': asyncio, 'dexClient': dexClient, 'uid': uid})
+    def bid(price, amount):
+        price = int(price*1e6)
+        loop = asyncio.get_event_loop()
+        tx = loop.run_until_complete(dexClient.limit_buy(price, amount))
+        return tx
+    w2 = ConsoleWidget(namespace={'asyncio': asyncio, 'dexClient': dexClient, 'uid': uid, 'bid': bid, 'ask': ask})
     d2.addWidget(w2)
 
     w3, plot_item, ask_line, bid_line, gd_bid_line, gd_ask_line = get_plot_widget(txWashPipe)
     d3.addWidget(w3)
 
-    w4 = pg.PlotWidget(title="Dock 4 plot")
-    w4.plot(np.random.normal(size=100))
+    w4 = pg.PlotWidget(title="# Confirmed Txs")
+    confirmedTxPlotItem = w4.plot(np.random.normal(size=100))
     d4.addWidget(w4)
 
     buttonLayout = pg.LayoutWidget()
@@ -101,10 +110,10 @@ def get_dash(txWashPipe, txButtons):
     buttonLayout.addWidget(b4, row=1, col=1)
     d5.addWidget(buttonLayout)
 
-    w6 = pg.PlotWidget(title="Dock 6 plot")
-    w6.plot(np.random.normal(size=100))
+    w6 = pg.PlotWidget(title="Confirmation Latencies")
+    latenciesPlotItem = w6.plot(np.random.normal(size=100))
     d6.addWidget(w6)
-    return win, plot_item, ask_line, bid_line, balanceSetter, gd_bid_line, gd_ask_line
+    return win, plot_item, ask_line, bid_line, balanceSetter, gd_bid_line, gd_ask_line, w2, confirmedTxPlotItem, latenciesPlotItem
 
 
 

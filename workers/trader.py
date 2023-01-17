@@ -15,8 +15,9 @@ logging.basicConfig(level=logging.INFO)
 
 
 class Trader:
-    def __init__(self, rx_conn):
+    def __init__(self, rx_conn, sigs_conn):
         self.rx_conn: Connection = rx_conn
+        self.sigs_conn: Connection = sigs_conn
 
         # init dex client
         pkstr = os.environ.get("pk_secret_hex")
@@ -34,6 +35,7 @@ class Trader:
             self.latencies.append(dt)
             self.num_trades += 1
             logging.info(f"mean confirmation: {np.mean(self.latencies)}, num trades: {self.num_trades}")
+            self.sigs_conn.send((str(sig), dt))
         except Exception as e:
             logging.error(traceback.format_exc())
             self.num_fails += 1
@@ -62,9 +64,9 @@ class Trader:
             await self.run_loop()
 
 
-def trader_process(rx_conn):
+def trader_process(rx_conn, sigs_conn):
     loop = asyncio.new_event_loop()
-    trader = Trader(rx_conn)
+    trader = Trader(rx_conn, sigs_conn)
     loop.run_until_complete(trader.run_loop())
 
 

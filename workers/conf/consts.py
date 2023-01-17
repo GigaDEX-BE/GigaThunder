@@ -13,10 +13,10 @@ MAINNET_HTTP_URLS = [
     "https://sly-morning-meme.solana-mainnet.quiknode.pro/",
     "https://purple-restless-cloud.solana-mainnet.quiknode.pro/",
 ]
+MAINNET_WSS_URL = "wss://solitary-quaint-fire.solana-mainnet.quiknode.pro/4fddcf75d9da1fa3a5606ec79e66048cf007bc22/"
 
 MAINNET_HTTP_URL = random.choice(MAINNET_HTTP_URLS)
 
-MAINNET_WSS_URL = "wss://solitary-quaint-fire.solana-mainnet.quiknode.pro/4fddcf75d9da1fa3a5606ec79e66048cf007bc22/"
 
 marketAddress = Pubkey.from_string("2jv2x2pA1B14cEfmptvEXFTLNcqabpkHBv8MnWCkhbeP")
 balances = Pubkey.from_string("D2tc92Dbo8uAZ6tVtbDEaUo6wYFsHAR3fSu4hrYdmnH3")
