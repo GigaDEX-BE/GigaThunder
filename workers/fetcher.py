@@ -13,7 +13,7 @@ import logging
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-FETCH_PERIOD_SEC = 5
+FETCH_PERIOD_SEC = 3
 
 
 class Fetcher:
@@ -54,19 +54,19 @@ class Fetcher:
                     else:
                         gd_ask = 0
                     self.guiConn.send((me_bid, me_ask, gd_bid, gd_ask))
-                else:
-                    if self.buttonsConn.poll(0.001):
-                        cmd = self.buttonsConn.recv()
-                        if cmd == "CHECK":
-                            logging.info(last_asks)
-                            logging.info(last_bids)
-                        elif cmd == "CANCEL":
-                            logging.info(f"cancelling")
-                            await run_cancel_all(self.dexClient, self.uid)
-                        else:
-                            logging.info(f"claiming")
-                            tx = await self.dexClient.claim_balance()
-                            logging.info(f"claimed wiht: {tx}")
+                if self.buttonsConn.poll(0.001):
+                    cmd = self.buttonsConn.recv()
+                    logging.info(f"got cmd: {cmd}")
+                    if cmd == "CHECK":
+                        logging.info(last_asks)
+                        logging.info(last_bids)
+                    elif cmd == "CANCEL":
+                        logging.info(f"cancelling")
+                        await run_cancel_all(self.dexClient, self.uid)
+                    else:
+                        logging.info(f"claiming")
+                        tx = await self.dexClient.claim_balance()
+                        logging.info(f"claimed wiht: {tx}")
 
                 await asyncio.sleep(cn.MAIN_LOOP_SLEEP)
             except:

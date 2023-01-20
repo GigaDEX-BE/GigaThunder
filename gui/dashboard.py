@@ -101,7 +101,11 @@ def get_dash(txWashPipe, txButtons):
     b1.clicked.connect(lambda: txButtons.send("CHECK"))
     b2.clicked.connect(lambda: txButtons.send("CANCEL"))
     b3.clicked.connect(lambda: txWashPipe.send(88888888))
-    b4.clicked.connect(lambda: txButtons.send("CLAIM"))
+
+    def sendclaim():
+        logging.info(f"pressed claim")
+        txButtons.send("CLAIM")
+    b4.clicked.connect(lambda: sendclaim())
 
 
     buttonLayout.addWidget(b1, row=0, col=0)
