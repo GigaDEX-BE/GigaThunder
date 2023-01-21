@@ -1,20 +1,17 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:us-east-2:764328871980:task-definition/SpeedStreamNew:5",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-2:764328871980:task-definition/SpeedStream-test:7",
     "containerDefinitions": [
         {
-            "name": "SpeedStream-image",
-            "image": "764328871980.dkr.ecr.us-east-2.amazonaws.com/speed-stream:c62069ad777693b046ab8f827398143c4d37ac1d",
+            "name": "speedstream-image",
+            "image": "764328871980.dkr.ecr.us-east-2.amazonaws.com/speedstream-test:9cc856857514114af3dcf0364b7baca115135bae",
             "cpu": 0,
             "portMappings": [
                 {
-                    "containerPort": 443,
-                    "hostPort": 443,
-                    "protocol": "tcp"
-                },
-                {
+                    "name": "speedstream-image-80-tcp",
                     "containerPort": 80,
                     "hostPort": 80,
-                    "protocol": "tcp"
+                    "protocol": "tcp",
+                    "appProtocol": "http"
                 }
             ],
             "essential": true,
@@ -24,18 +21,19 @@
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/SpeedStreamNew",
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/SpeedStream-test",
                     "awslogs-region": "us-east-2",
                     "awslogs-stream-prefix": "ecs"
                 }
             }
         }
     ],
-    "family": "SpeedStreamNew",
+    "family": "SpeedStream-test",
     "taskRoleArn": "arn:aws:iam::764328871980:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::764328871980:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 5,
+    "revision": 7,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
@@ -62,6 +60,9 @@
         },
         {
             "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
         }
     ],
     "placementConstraints": [],
@@ -72,12 +73,18 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "4096",
-    "memory": "8192",
+    "cpu": "1024",
+    "memory": "2048",
     "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
     },
-    "registeredAt": "2023-01-16T02:17:55.337Z",
+    "registeredAt": "2023-01-20T01:13:08.667Z",
     "registeredBy": "arn:aws:iam::764328871980:user/github-actions",
-    "tags": []
+    "tags": [
+        {
+            "key": "ecs:taskDefinition:createdFrom",
+            "value": "ecs-console-v2"
+        }
+    ]
 }
