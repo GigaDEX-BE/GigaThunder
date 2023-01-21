@@ -54,13 +54,10 @@ class BenchmarkController:
         self.loop_idx = 0
         self.last_loop_ts = time.time() # TODO measure loop latency
         self.ran_once = False
-        self.init_ts = time.time()
+        self.init_ts = 0
 
     def run_main_loop(self):
         self.loop_idx += 1
-        logging.info(f"Initial delay for workers to start: {WORKER_START_DELAY} Seconds")
-        time.sleep(WORKER_START_DELAY)
-        self.txButtons.send("CLAIM")
 
         if not self.ran_once and (time.time() - self.init_ts) > BENCHMARK_START_DELAY_SEC:
             self.BENCHMARK_MODE = True
@@ -107,6 +104,10 @@ class BenchmarkController:
             logging.info(f"====================================================\n")
 
     def run(self):
+        logging.info(f"Initial delay for workers to start: {WORKER_START_DELAY} Seconds")
+        time.sleep(WORKER_START_DELAY)
+        self.txButtons.send("CLAIM")
+        self.init_ts = time.time()
         while True:
             try:
                 self.run_main_loop()

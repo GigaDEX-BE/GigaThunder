@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import asyncio
 import time
 import traceback
+from solana.rpc.core import UnconfirmedTxError
 from workers.utils.cancel_all import run_cancel_all
 from workers.utils.me_price_feed import get_highest_bid_async, get_lowest_ask_async
 from multiprocessing.connection import Connection
@@ -13,7 +14,7 @@ import logging
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-FETCH_PERIOD_SEC = 3
+FETCH_PERIOD_SEC = 10
 
 
 class Fetcher:
@@ -65,8 +66,11 @@ class Fetcher:
                         await run_cancel_all(self.dexClient, self.uid)
                     else:
                         logging.info(f"claiming")
-                        tx = await self.dexClient.claim_balance()
-                        logging.info(f"claimed wiht: {tx}")
+                        try:
+                            tx = await self.dexClient.claim_balance()
+                            logging.info(f"claimed wiht: {tx}")
+                        except UnconfirmedTxError:
+                            logging.info(f"unable to confirm claim w/in fetcher...")
 
                 await asyncio.sleep(cn.MAIN_LOOP_SLEEP)
             except:
