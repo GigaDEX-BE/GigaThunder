@@ -11,7 +11,7 @@ env:
   ECS_SERVICE: SpeedStream                # set this to your Amazon ECS service name
   ECS_CLUSTER: NewTestCluster                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: .github/workflows/aws-task.json      # set this to the path to your Amazon ECS task definition                                       
-  CONTAINER_NAME: speedstream-image             # file, e.g. .aws/task-definition.json
+  CONTAINER_NAME: SpeedStream-image             # file, e.g. .aws/task-definition.json
 
 
 permissions:
