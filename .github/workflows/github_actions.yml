@@ -3,7 +3,7 @@ name: Deploy to ECS to speedstream
 on:
   push:
     branches:
-      [ "main" ]
+      [ "no-gui-refactor" ]
 
 env:
   AWS_REGION: us-east-2               # set this to your preferred AWS region, e.g. us-west-1
