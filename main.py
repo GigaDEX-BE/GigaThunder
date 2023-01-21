@@ -15,6 +15,7 @@ GUI_MODE = False
 NUM_TIME_SAMPLES = 800
 BENCHMARK_TIME_SEC = 10
 LOG_PERIOD_SEC = 5
+MAIN_LOOP_SLEEP_TIME_SEC = 0.010
 
 
 class BenchmarkController:
@@ -28,7 +29,7 @@ class BenchmarkController:
         rpxTrader, self.txpTrader = Pipe(duplex=False)
         self.rpxGui, txpGui = Pipe(duplex=False)
         self.rxBalance, txBalance = Pipe(duplex=False)
-        rxButtons, txButtons = Pipe(duplex=False)
+        self.rxButtons, txButtons = Pipe(duplex=False)
         self.rxSigs, txSigs = Pipe(duplex=False)
 
         # start workers
@@ -50,8 +51,10 @@ class BenchmarkController:
         self.last_price = 55
         self.num_confirmed_txs = 0
         self.last_log_ts = time.time()
+        self.loop_idx = 0
 
     def run_main_loop(self):
+        self.loop_idx += 1
         if self.BENCHMARK_MODE:
             price = self.benchmark.next()
             self.xdata.append(time.time())
@@ -60,6 +63,7 @@ class BenchmarkController:
             if (time.time() - self.bench_start_time) > BENCHMARK_TIME_SEC:
                 self.BENCHMARK_MODE = False
                 self.last_price = price
+                self.rxButtons.send("CLAIM")
 
         if self.rpxGui.poll(0.001):
             me_bid, me_ask, gd_bid, gd_ask = self.rpxGui.recv()
@@ -80,6 +84,7 @@ class BenchmarkController:
         ts = time.time()
         if (ts - self.last_log_ts) > LOG_PERIOD_SEC:
             self.last_log_ts = ts
+            logging.info(f"============loop_idx: {self.loop_idx}===============")
             logging.info(f"BENCHMARK_MODE: {self.BENCHMARK_MODE}")
             logging.info(f"NUM_CONFIRMED_txs: {self.num_confirmed_txs}")
             if len(self.latencyData) > 0:
@@ -87,13 +92,14 @@ class BenchmarkController:
                 logging.info(f"MED TX LATENCY: {np.median(self.latencyData)}")
                 logging.info(f"MIN TX LATENCY: {np.min(self.latencyData)}")
                 logging.info(f"MAX TX LATENCY: {np.max(self.latencyData)}")
+            logging.info(f"====================================================\n")
 
     def run(self):
         while True:
             try:
                 self.run_main_loop()
                 self.log_status()
-                time.sleep(0.010)
+                time.sleep(MAIN_LOOP_SLEEP_TIME_SEC)
             except Exception as e:
                 logging.error(traceback.format_exc())
 
