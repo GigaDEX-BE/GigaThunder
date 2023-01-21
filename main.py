@@ -15,7 +15,9 @@ GUI_MODE = False
 NUM_TIME_SAMPLES = 800
 BENCHMARK_TIME_SEC = 10
 LOG_PERIOD_SEC = 5
+WORKER_START_DELAY = 3
 MAIN_LOOP_SLEEP_TIME_SEC = 0.010
+BENCHMARK_START_DELAY_SEC = 15
 
 
 class BenchmarkController:
@@ -29,11 +31,11 @@ class BenchmarkController:
         rpxTrader, self.txpTrader = Pipe(duplex=False)
         self.rpxGui, txpGui = Pipe(duplex=False)
         self.rxBalance, txBalance = Pipe(duplex=False)
-        self.rxButtons, txButtons = Pipe(duplex=False)
+        self.rxButtons, self.txButtons = Pipe(duplex=False)
         self.rxSigs, txSigs = Pipe(duplex=False)
 
         # start workers
-        self.fetcherProcess = Process(target=fetcher_process, args=(txpGui, rxButtons ))
+        self.fetcherProcess = Process(target=fetcher_process, args=(txpGui, self.rxButtons ))
         self.fetcherProcess.start()
         self.traderProcess = Process(target=trader_process, args=(rpxTrader, txSigs, ))
         self.traderProcess.start()
@@ -42,8 +44,6 @@ class BenchmarkController:
 
         self.benchmark = FracLightGen()
 
-        self.xdata = deque([], maxlen=NUM_TIME_SAMPLES)
-        self.ydata = deque([], maxlen=NUM_TIME_SAMPLES)
         self.confirmData = deque([], maxlen=NUM_TIME_SAMPLES)
         self.latencyData = deque([], maxlen=NUM_TIME_SAMPLES)
 
@@ -52,18 +52,30 @@ class BenchmarkController:
         self.num_confirmed_txs = 0
         self.last_log_ts = time.time()
         self.loop_idx = 0
+        self.last_loop_ts = time.time() # TODO measure loop latency
+        self.ran_once = False
+        self.init_ts = time.time()
 
     def run_main_loop(self):
         self.loop_idx += 1
+        logging.info(f"Initial delay for workers to start: {WORKER_START_DELAY} Seconds")
+        time.sleep(WORKER_START_DELAY)
+        self.txButtons.send("CLAIM")
+
+        if not self.ran_once and (time.time() - self.init_ts) > BENCHMARK_START_DELAY_SEC:
+            self.BENCHMARK_MODE = True
+            self.ran_once = True
+            self.bench_start_time = time.time()
+            logging.info(f"Started Benchmark [ONCE]")
+
         if self.BENCHMARK_MODE:
             price = self.benchmark.next()
-            self.xdata.append(time.time())
-            self.ydata.append(price)
             self.txpTrader.send(price)
             if (time.time() - self.bench_start_time) > BENCHMARK_TIME_SEC:
                 self.BENCHMARK_MODE = False
                 self.last_price = price
-                self.rxButtons.send("CLAIM")
+                self.txButtons.send("CLAIM")
+                logging.info(f"FINISHED BENCHMARK")
 
         if self.rpxGui.poll(0.001):
             me_bid, me_ask, gd_bid, gd_ask = self.rpxGui.recv()
@@ -102,7 +114,6 @@ class BenchmarkController:
                 time.sleep(MAIN_LOOP_SLEEP_TIME_SEC)
             except Exception as e:
                 logging.error(traceback.format_exc())
-
 
 
 if __name__ == "__main__":

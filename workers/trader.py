@@ -3,6 +3,7 @@ from workers.conf import consts as cn
 import asyncio
 import numpy as np
 import random
+from solana.rpc.core import UnconfirmedTxError
 from collections import deque
 import os
 import traceback
@@ -26,6 +27,7 @@ class Trader:
         self.latencies = deque([], maxlen=100)
         self.num_fails = 0
         self.num_trades = 0
+        self.num_unconfirmed = 0
 
     def trade_callback(self, task):
         dt = int(time.time()*1000) - int(task.get_name())
@@ -36,6 +38,9 @@ class Trader:
             self.num_trades += 1
             logging.info(f"mean confirmation: {np.mean(self.latencies)}, num trades: {self.num_trades}")
             self.sigs_conn.send((str(sig), dt))
+        except UnconfirmedTxError:
+            self.num_unconfirmed += 1
+            logging.info(f"num_unconfirmed: {self.num_unconfirmed}")
         except Exception as e:
             logging.error(traceback.format_exc())
             self.num_fails += 1

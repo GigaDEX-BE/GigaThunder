@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from workers.conf import consts as cn
 from anchorpy.provider import Wallet
 from anchorpy import Provider
@@ -134,16 +136,18 @@ async def run_cancel_limit_sell(price, async_client, keypair):
     return tx_result
 
 
-async def run_claim_balance(receiver_lot_ata, async_client, keypair):
+async def run_claim_balance(receiver_lot_ata, async_client, keypair, verbose=False):
     wsolMint = AsyncToken(async_client, WRAPPED_SOL_MINT, TOKEN_PROGRAM_ID, keypair)
+    # TODO ensure these are actually created
     receiverWsolAta = await wsolMint.create_account(keypair.pubkey())
-    if receiver_lot_ata is None:
-        lotMint = AsyncToken(async_client, cn.lotsMint, TOKEN_PROGRAM_ID, keypair)
-        receiver_lot_ata = await lotMint.create_account(keypair.pubkey())
+    logging.info(f"sleeping for 3 to ensure rxwsol ata is created...")
+    await asyncio.sleep(3)
     wallet = Wallet(keypair)
     provider = Provider(async_client, wallet, opts=fastOpts)
     user_pda, _ = Pubkey.find_program_address([cn.marketAddress.__bytes__(),
-                                                  keypair.pubkey().__bytes__()], PROGRAM_ID)
+                                               keypair.pubkey().__bytes__()], PROGRAM_ID)
+    if verbose:
+        logging.info(f"user_pda: {user_pda}")
     accounts = {
         'signer': keypair.pubkey(),
         'user': user_pda,
