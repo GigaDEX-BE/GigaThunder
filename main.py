@@ -6,6 +6,7 @@ import numpy as np
 from workers.fetcher import fetcher_process
 from workers.trader import trader_process
 from workers.balancer import balancer_process
+from workers.subscriber import subscriber_process
 from multiprocessing import Process, Pipe
 from gui.utils.FracLightGen import FracLightGen
 from collections import deque
@@ -33,6 +34,7 @@ class BenchmarkController:
         self.rxBalance, txBalance = Pipe(duplex=False)
         self.rxButtons, self.txButtons = Pipe(duplex=False)
         self.rxSigs, txSigs = Pipe(duplex=False)
+        self.rxWsTrades, txWsTrades = Pipe(duplex=False)
 
         # start workers
         self.fetcherProcess = Process(target=fetcher_process, args=(txpGui, self.rxButtons ))
@@ -41,11 +43,14 @@ class BenchmarkController:
         self.traderProcess.start()
         self.balancerProcess = Process(target=balancer_process, args=(txBalance, ))
         self.balancerProcess.start()
+        self.subscriberProcess = Process(target=subscriber_process, args=(txWsTrades, ))
+        self.subscriberProcess.start()
 
         self.workers = {
             'fetcher': self.fetcherProcess,
             'trader': self.traderProcess,
-            'balancer': self.balancerProcess
+            'balancer': self.balancerProcess,
+            'subscriber': self.subscriberProcess
         }
 
         self.benchmark = FracLightGen()

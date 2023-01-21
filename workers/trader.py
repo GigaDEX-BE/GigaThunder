@@ -1,9 +1,6 @@
 import time
 from workers.conf import consts as cn
 import asyncio
-import numpy as np
-import random
-from solana.rpc.core import UnconfirmedTxError
 from collections import deque
 import os
 import traceback
