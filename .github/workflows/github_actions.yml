@@ -56,7 +56,7 @@ jobs:
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
 
-    -name : Create dotenv file
+    - name : Create dotenv file
       run : |
         touch .env
         echo pk_secret_hex = ${{ secrets.PK_SECRET_HEX }} >> .env
