@@ -1,113 +1,101 @@
 # get gui
 import logging
 import time
+import traceback
+import numpy as np
 from workers.fetcher import fetcher_process
 from workers.trader import trader_process
 from workers.balancer import balancer_process
 from multiprocessing import Process, Pipe
-import pyqtgraph as pg
-from gui.dashboard import get_dash
 from gui.utils.FracLightGen import FracLightGen
 from collections import deque
 
 
-# init pipes
-rpxTrader, txpTrader = Pipe(duplex=False)
-rpxGui, txpGui = Pipe(duplex=False)
-rxWashPipe, txWashPipe = Pipe(duplex=False)
-rxBalance, txBalance = Pipe(duplex=False)
-rxButtons, txButtons = Pipe(duplex=False)
-rxSigs, txSigs = Pipe(duplex=False)
-
-# start workers
-fetcherProcess = Process(target=fetcher_process, args=(txpGui, rxButtons ))
-fetcherProcess.start()
-traderProcess = Process(target=trader_process, args=(rpxTrader, txSigs, ))
-traderProcess.start()
-balancerProcess = Process(target=balancer_process, args=(txBalance, ))
-balancerProcess.start()
-
-# make the graph
-dash, plot_item, ask_line, bid_line, balanceSetter, gd_bid_line, gd_ask_line, consoleWidget, confirmPlot, latePlot = get_dash(txWashPipe, txButtons)
-dash.show()
-
-# HIDE THIS AFTER THOUGH FFS, in like a class duh
-
+GUI_MODE = False
 NUM_TIME_SAMPLES = 800
-
-xdata = deque([], maxlen=NUM_TIME_SAMPLES)
-ydata = deque([], maxlen=NUM_TIME_SAMPLES)
-benchmark = FracLightGen()
+BENCHMARK_TIME_SEC = 10
+LOG_PERIOD_SEC = 5
 
 
-txXaxis = deque([], maxlen=NUM_TIME_SAMPLES)
-confirmData = deque([], maxlen=NUM_TIME_SAMPLES)
-latencyData = deque([], maxlen=NUM_TIME_SAMPLES)
+class BenchmarkController:
 
-BENCHMARK_MODE = False
-BENCHMARK_TIME_SEC = 16
-bench_start_time = 0
+    def __init__(self):
 
-last_price = 62
+        # state
+        self.BENCHMARK_MODE = False
 
-num_confirmed_txs = 0
+        # init pipes
+        rpxTrader, self.txpTrader = Pipe(duplex=False)
+        self.rpxGui, txpGui = Pipe(duplex=False)
+        self.rxBalance, txBalance = Pipe(duplex=False)
+        rxButtons, txButtons = Pipe(duplex=False)
+        self.rxSigs, txSigs = Pipe(duplex=False)
 
-def update():
-    global benchmark, plot_item, xdata, ydata, rpxGui, ask_line, bid_line, txpTrader, BENCHMARK_MODE, last_price, \
-        bench_start_time, gd_ask_line, gd_bid_line, consoleWidget, num_confirmed_txs, confirmData, latencyData, txXaxis, confirmPlot, latePlot
+        # start workers
+        self.fetcherProcess = Process(target=fetcher_process, args=(txpGui, rxButtons ))
+        self.fetcherProcess.start()
+        self.traderProcess = Process(target=trader_process, args=(rpxTrader, txSigs, ))
+        self.traderProcess.start()
+        self.balancerProcess = Process(target=balancer_process, args=(txBalance, ))
+        self.balancerProcess.start()
 
-    if BENCHMARK_MODE:
-        price = benchmark.next()
-        xdata.append(time.time())
-        ydata.append(price)
-        plot_item.setData(x=xdata, y=ydata)
-        txpTrader.send(price)
-        if (time.time() - bench_start_time) > BENCHMARK_TIME_SEC:
-            BENCHMARK_MODE = False
-            last_price = price
-    else:
-        if rxWashPipe.poll(0.001):
-            last_price = rxWashPipe.recv()
-            if last_price == 88888888:
-                BENCHMARK_MODE = True
-                bench_start_time = time.time()
-                return
-            txpTrader.send(last_price)
-        xdata.append(time.time())
-        ydata.append(last_price)
-        plot_item.setData(x=xdata, y=ydata)
+        self.benchmark = FracLightGen()
 
-    if rpxGui.poll(0.001):
-        me_bid, me_ask, gd_bid, gd_ask = rpxGui.recv()
-        # if gd_bid > 0:
-        #     gd_bid_line.setValue(gd_bid)
-        # if gd_ask > 0:
-        #     gd_ask_line.setValue(gd_ask)
-        bid_line.setValue(me_bid)
-        ask_line.setValue(me_ask)
-        benchmark.floor = me_bid
-        benchmark.ceiling = me_ask
+        self.xdata = deque([], maxlen=NUM_TIME_SAMPLES)
+        self.ydata = deque([], maxlen=NUM_TIME_SAMPLES)
+        self.confirmData = deque([], maxlen=NUM_TIME_SAMPLES)
+        self.latencyData = deque([], maxlen=NUM_TIME_SAMPLES)
 
-    if rxBalance.poll(0.001):
-        bals = rxBalance.recv()
-        balanceSetter(*bals)
+        self.bench_start_time = 0
+        self.last_price = 55
+        self.num_confirmed_txs = 0
+        self.last_log_ts = time.time()
 
-    if rxSigs.poll(0.001):
-        sig, dt = rxSigs.recv()
-        txXaxis.append(time.time())
-        num_confirmed_txs += 1
-        confirmData.append(num_confirmed_txs)
-        latencyData.append(dt)
-        confirmPlot.setData(x=txXaxis, y=confirmData)
-        latePlot.setData(x=txXaxis, y=latencyData)
-        consoleWidget.write(f"https://explorer.solana.com/tx/{sig}\nConfirmation Latency {dt}ms\n\n")
+    def run_main_loop(self):
+        if self.BENCHMARK_MODE:
+            price = self.benchmark.next()
+            self.xdata.append(time.time())
+            self.ydata.append(price)
+            self.txpTrader.send(price)
+            if (time.time() - self.bench_start_time) > BENCHMARK_TIME_SEC:
+                self.BENCHMARK_MODE = False
+                self.last_price = price
+
+        if self.rpxGui.poll(0.001):
+            me_bid, me_ask, gd_bid, gd_ask = self.rpxGui.recv()
+            self.benchmark.floor = me_bid
+            self.benchmark.ceiling = me_ask
+
+        if self.rxBalance.poll(0.001):
+            bals = self.rxBalance.recv()
+            logging.info(f"got new bals: {bals}")
+
+        if self.rxSigs.poll(0.001):
+            sig, dt = self.rxSigs.recv()
+            self.num_confirmed_txs += 1
+            self.confirmData.append(self.num_confirmed_txs)
+            self.latencyData.append(dt)
+
+    def log_status(self):
+        ts = time.time()
+        if (ts - self.last_log_ts) > LOG_PERIOD_SEC:
+            self.last_log_ts = ts
+            logging.info(f"BENCHMARK_MODE: {self.BENCHMARK_MODE}")
+            logging.info(f"NUM_CONFIRMED_txs: {self.num_confirmed_txs}")
+            if len(self.latencyData) > 0:
+                logging.info(f"MEAN TX LATENCY: {np.mean(self.latencyData)}")
+                logging.info(f"MED TX LATENCY: {np.median(self.latencyData)}")
+                logging.info(f"MIN TX LATENCY: {np.min(self.latencyData)}")
+                logging.info(f"MAX TX LATENCY: {np.max(self.latencyData)}")
+
+    def run(self):
+        while True:
+            try:
+                self.run_main_loop()
+                self.log_status()
+                time.sleep(0.010)
+            except Exception as e:
+                logging.error(traceback.format_exc())
 
 
-timer = pg.QtCore.QTimer()
-timer.timeout.connect(update)
-timer.start(10)
-
-
-
-pg.exec()
 
