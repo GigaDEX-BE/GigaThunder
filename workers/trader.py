@@ -11,8 +11,10 @@ from workers.utils.dex_api_helper.dex_client import GigaDexClient
 from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
+from random import randint
 
 TO_SEND_THRESHOLD = 10
+RAND_PRICE_RANGE = int(5e2)
 
 
 class Trader:
@@ -34,7 +36,7 @@ class Trader:
         self.num_unconfirmed = 0
         self.num_dup_price_skips = 0
 
-    def trade_callback(self, task: Task): # TODO so many repeats...??????
+    def trade_callback(self, task: Task):
         task_name = str(task.get_name())
         t0, price = task_name.split(",")
         t0 = int(t0)
@@ -46,14 +48,11 @@ class Trader:
             self.latencies.append(dt)
             self.sigs.append(str(sig))
             self.num_trades += 1
-            self.to_send.append((str(sig), dt, ))
+            self.to_send.append((str(sig), dt, price, ))
         except Exception as e:
             logging.error(f"GOT CALLBACK ERR TYPE {e}")
             self.num_fails += 1
         finally:
-            # TODO remove done callback
-            # TODO, possible that its coz not most recent repeat...
-            # task.remove_done_callback(self.trade_callback)
             pass
 
     async def send_results(self):
@@ -69,14 +68,14 @@ class Trader:
             logging.info(await self.dexClient.get_wallet_balance())
             while True:
                 if self.rx_conn.poll(cn.POLL_TIME_SEC):
-                    floor_price_sol = self.rx_conn.recv()
-                    floor_price_lams = int(floor_price_sol * 1e9)
-                    lams_per_lot = int(floor_price_lams / 1e3)
 
+                    lams_per_lot = self.rx_conn.recv()
 
-                    # TODO
-                    rand_lots = randint(int(-1*RAND_PRICE_RANGE), RAND_PRICE_RANGE)
-                    rand_sol = rand_lots / 1e9
+                    # floor_price_sol = self.rx_conn.recv()
+                    # floor_price_lams = int(floor_price_sol * 1e9)
+                    # lams_per_lot = int(floor_price_lams / 1e3)
+                    # rand_lams = randint(int(-1*RAND_PRICE_RANGE), RAND_PRICE_RANGE)
+                    # lams_per_lot += rand_lams
 
                     if lams_per_lot in self.recent_prices:
                         self.num_dup_price_skips += 1

@@ -12,8 +12,8 @@ from gui.utils.FracLightGen import FracLightGen
 from collections import deque
 from random import randint
 
-RAND_PRICE_RANGE = int(2e2)
 GUI_MODE = False
+RAND_PRICE_RANGE = int(5e2)
 NUM_TIME_SAMPLES = 800
 BENCHMARK_TIME_SEC = 4
 LOG_PERIOD_SEC = 5
@@ -79,12 +79,20 @@ class BenchmarkController:
 
         if self.BENCHMARK_MODE:
 
+            floor_price_sol = self.benchmark.next()
 
-            price = self.benchmark.next()
-            self.txpTrader.send(price)
+            # convert to lot in lams and randomize
+            floor_price_lams = int(floor_price_sol * 1e9)
+            lams_per_lot = int(floor_price_lams / 1e3)
+            rand_lams = randint(int(-1*RAND_PRICE_RANGE), RAND_PRICE_RANGE)
+            lams_per_lot += rand_lams
+
+            # send to trader
+            self.txpTrader.send(lams_per_lot)
+
             if (time.time() - self.bench_start_time) > BENCHMARK_TIME_SEC:
                 self.BENCHMARK_MODE = False
-                self.last_price = price
+                self.last_price = floor_price_sol
                 self.txButtons.send("CLAIM")
                 logging.info(f"FINISHED BENCHMARK")
 
@@ -99,7 +107,8 @@ class BenchmarkController:
 
         if self.rxSigs.poll(0.001):
             data = self.rxSigs.recv()
-            for sig, dt in data:
+            for sig, dt, price in data:
+                # TODO save price and match up...
                 self.num_confirmed_txs += 1
                 self.confirmData.append(self.num_confirmed_txs)
                 self.latencyData.append(dt)

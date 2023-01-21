@@ -50,11 +50,11 @@ class Subscriber:
                         if sell_log.amount == 1:
                             msg = {'price': sell_log.total_value_lamports, 'ts': time.time()}
 
-                            logging.info(f"got msg: {msg}")
                             self.num_notifications += 1
                             self.notifications.append(msg)
 
                             # TODO do something with this to aggregate in main...
+                            logging.info(f"got msg: {msg}")
                             # self.tx_conn.send(msg)
 
                     else:
