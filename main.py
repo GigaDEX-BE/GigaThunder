@@ -13,7 +13,7 @@ from collections import deque
 
 GUI_MODE = False
 NUM_TIME_SAMPLES = 800
-BENCHMARK_TIME_SEC = 10
+BENCHMARK_TIME_SEC = 4
 LOG_PERIOD_SEC = 5
 WORKER_START_DELAY = 3
 MAIN_LOOP_SLEEP_TIME_SEC = 0.010
@@ -41,6 +41,12 @@ class BenchmarkController:
         self.traderProcess.start()
         self.balancerProcess = Process(target=balancer_process, args=(txBalance, ))
         self.balancerProcess.start()
+
+        self.workers = {
+            'fetcher': self.fetcherProcess,
+            'trader': self.traderProcess,
+            'balancer': self.balancerProcess
+        }
 
         self.benchmark = FracLightGen()
 
@@ -84,10 +90,11 @@ class BenchmarkController:
             logging.info(f"got new bals: {bals}")
 
         if self.rxSigs.poll(0.001):
-            sig, dt = self.rxSigs.recv()
-            self.num_confirmed_txs += 1
-            self.confirmData.append(self.num_confirmed_txs)
-            self.latencyData.append(dt)
+            data = self.rxSigs.recv()
+            for sig, dt in data:
+                self.num_confirmed_txs += 1
+                self.confirmData.append(self.num_confirmed_txs)
+                self.latencyData.append(dt)
 
     def log_status(self):
         ts = time.time()
@@ -96,6 +103,8 @@ class BenchmarkController:
             logging.info(f"============loop_idx: {self.loop_idx}===============")
             logging.info(f"BENCHMARK_MODE: {self.BENCHMARK_MODE}")
             logging.info(f"NUM_CONFIRMED_txs: {self.num_confirmed_txs}")
+            for k, v in self.workers.items():
+                logging.info(f"{k} is alive: {v.is_alive()}")
             if len(self.latencyData) > 0:
                 logging.info(f"MEAN TX LATENCY: {np.mean(self.latencyData)}")
                 logging.info(f"MED TX LATENCY: {np.median(self.latencyData)}")

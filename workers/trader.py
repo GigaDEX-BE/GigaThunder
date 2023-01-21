@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
+TO_SEND_THRESHOLD = 10
+
 
 class Trader:
     def __init__(self, rx_conn, sigs_conn):
@@ -23,27 +25,34 @@ class Trader:
         # init dex client
         pkstr = os.environ.get("pk_secret_hex")
         lot_account_pk_str = os.environ.get("lot_account_pk_str")
-        self.dexClient = GigaDexClient(lot_account_pk_str, pkstr)
+        custom_rpc_url = os.environ.get("custom_rpc_url")
+        self.dexClient = GigaDexClient(lot_account_pk_str, pkstr, custom_rpc_url=custom_rpc_url)
         self.latencies = deque([], maxlen=100)
+        self.sigs = deque([], maxlen=100)
+        self.to_send = []
         self.num_fails = 0
         self.num_trades = 0
         self.num_unconfirmed = 0
 
-    def trade_callback(self, task):
+    def trade_callback(self, task): # TODO so many repeats...??????
         dt = int(time.time()*1000) - int(task.get_name())
         try:
             sig = task.result()
-            logging.info(sig)
+            logging.info(f"{sig} @ {dt}")
             self.latencies.append(dt)
+            self.sigs.append(str(sig))
             self.num_trades += 1
-            logging.info(f"mean confirmation: {np.mean(self.latencies)}, num trades: {self.num_trades}")
-            self.sigs_conn.send((str(sig), dt))
-        except UnconfirmedTxError:
-            self.num_unconfirmed += 1
-            logging.info(f"num_unconfirmed: {self.num_unconfirmed}")
+            self.to_send.append((str(sig), dt, )) # TODO might need to use some async safe queue for this...?
         except Exception as e:
-            logging.error(traceback.format_exc())
+            logging.error(f"GOT CALLBACK ERR TYPE {e}")
             self.num_fails += 1
+
+    async def send_results(self):
+        try:
+            self.sigs_conn.send(list(self.to_send))
+            self.to_send = []
+        except Exception as e:
+            logging.error(f"ERROR IN SEND RESULTS FROM TRADER: {e}")
 
     async def run_loop(self):
         try:
@@ -61,9 +70,11 @@ class Trader:
                     coro = self.dexClient.limit_sell_market_buy(lams_per_lot, 1)
                     task = asyncio.create_task(coro, name=f"{int(time.time()*1000)}")
                     task.add_done_callback(self.trade_callback)
-                    await self.dexClient.randomize_rpc()
+                if len(self.to_send) > TO_SEND_THRESHOLD:
+                    await self.send_results()
                 await asyncio.sleep(cn.MAIN_LOOP_SLEEP)
         except Exception as _e:
+            logging.error(f"=====================RESETTING TRADER=================")
             logging.error(traceback.format_exception())
             await asyncio.sleep(cn.MAIN_BREAK_SLEEP)
             await self.run_loop()

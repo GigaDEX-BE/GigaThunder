@@ -5,13 +5,18 @@ from solders.pubkey import Pubkey
 from workers.conf import consts
 from solana.rpc.commitment import Confirmed
 from workers import utils
+import logging
 import random
 
 
 class GigaDexClient:
 
-    def __init__(self, lot_account, priv):
-        rpc_url = consts.MAINNET_HTTP_URL
+    def __init__(self, lot_account, priv, custom_rpc_url=None):
+        if not custom_rpc_url:
+            rpc_url = consts.MAINNET_HTTP_URL
+        else:
+            logging.info(f"using custom rpc url: {custom_rpc_url}")
+            rpc_url = custom_rpc_url
         self.async_rpc_client = AsyncClient(rpc_url, commitment=Confirmed)
         self.keypair = Keypair.from_seed(bytes.fromhex(priv))
         self.lot_account = Pubkey.from_string(lot_account)

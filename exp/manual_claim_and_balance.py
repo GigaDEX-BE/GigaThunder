@@ -12,8 +12,9 @@ logging.basicConfig(level=logging.INFO)
 # init
 pkstr = os.environ.get("pk_secret_hex")
 lot_account_pk_str = os.environ.get("lot_account_pk_str")
+custom_rpc_url = os.environ.get("custom_rpc_url")
 uid = int(os.environ.get("bot_uid"))
-dexClient = GigaDexClient(lot_account_pk_str, pkstr)
+dexClient = GigaDexClient(lot_account_pk_str, pkstr, custom_rpc_url=custom_rpc_url)
 loop = asyncio.get_event_loop()
 print(f"bot pubkey: {dexClient.keypair.pubkey()}")
 
