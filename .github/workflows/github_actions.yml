@@ -57,13 +57,13 @@ jobs:
 
 
     -name : Create dotenv file
-    run : |
-      touch .env
-      echo pk_secret_hex = ${{ secrets.PK_SECRET_HEX }} >> .env
-      echo lot_account_pk_str = ${{ secrets.LOT_ACCOUNT_PK_STR }} >> .env
-      echo bot_uid = ${{ secrets.BOT_UID }} >> .env
-      echo custom_rpc_url = ${{ secrets.CUSTOM_RPC_URL }} >> .env
-  
+      run : |
+        touch .env
+        echo pk_secret_hex = ${{ secrets.PK_SECRET_HEX }} >> .env
+        echo lot_account_pk_str = ${{ secrets.LOT_ACCOUNT_PK_STR }} >> .env
+        echo bot_uid = ${{ secrets.BOT_UID }} >> .env
+        echo custom_rpc_url = ${{ secrets.CUSTOM_RPC_URL }} >> .env
+    
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
