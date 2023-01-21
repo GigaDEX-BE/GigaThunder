@@ -63,6 +63,7 @@ jobs:
         echo lot_account_pk_str = ${{ secrets.LOT_ACCOUNT_PK_STR }} >> .env
         echo bot_uid = ${{ secrets.BOT_UID }} >> .env
         echo custom_rpc_url = ${{ secrets.CUSTOM_RPC_URL }} >> .env
+        echo custom_rpc_ws = ${{ secrets.CUSTOM_RPC_WS }} >> .env
     
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
