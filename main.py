@@ -10,8 +10,9 @@ from workers.subscriber import subscriber_process
 from multiprocessing import Process, Pipe
 from gui.utils.FracLightGen import FracLightGen
 from collections import deque
+from random import randint
 
-
+RAND_PRICE_RANGE = int(2e2)
 GUI_MODE = False
 NUM_TIME_SAMPLES = 800
 BENCHMARK_TIME_SEC = 4
@@ -77,6 +78,8 @@ class BenchmarkController:
             logging.info(f"Started Benchmark [ONCE]")
 
         if self.BENCHMARK_MODE:
+
+
             price = self.benchmark.next()
             self.txpTrader.send(price)
             if (time.time() - self.bench_start_time) > BENCHMARK_TIME_SEC:
